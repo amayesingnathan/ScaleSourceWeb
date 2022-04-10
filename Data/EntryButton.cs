@@ -17,14 +17,12 @@ namespace ScaleSourceWeb.Data
         public static readonly string[] ScaleNames = { "Major", "Minor" };
 
         public SfButton? Button { get; set; }
-        public int Index { get; set; }
         public string Name { get; set; }
         public string APIName => ToAPIName(Name);
         public ChordEntryStage Stage { get; set; }
 
         public EntryButton(int i, ChordEntryStage stage)
         {
-            Index = i;
             Stage = stage;
             switch (stage)
             {

@@ -66,7 +66,7 @@ namespace ScaleSourceWeb.Data
             return null;
         }
 
-        private static IEnumerable<Chord> PruneChords(IEnumerable<Chord?> Progression)
+        private static IEnumerable<Chord> PruneNullChords(IEnumerable<Chord?> Progression)
         {
             return Progression.Where(i => i != null);
         }
@@ -75,7 +75,7 @@ namespace ScaleSourceWeb.Data
         {
             var ChordProgression = ChordNames.Select(name => FindChord(name).Result);
 
-            var FinalChordProgression = PruneChords(ChordProgression);
+            var FinalChordProgression = PruneNullChords(ChordProgression);
 
             return FinalChordProgression;
         }

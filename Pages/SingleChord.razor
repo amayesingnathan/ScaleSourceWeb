@@ -61,7 +61,7 @@
 
     case ChordEntryStage.Display:
     {
-        <SfButton CssClass="e-round-corner" @onclick="BackButton">Back</SfButton>
+        <SfButton CssClass="e-round-corner" @onclick="HomeButton">Start</SfButton>
         @if (mCurrentChord is null && !mRequestFailed)
         {
             <p><em>Loading...</em></p>
@@ -95,8 +95,6 @@
     break;
 }
 
-<p>@mRequestChord</p>
-
 @code {
     private ChordEntryStage mChordEntryStage = ChordEntryStage.Note;
 
@@ -120,8 +118,10 @@
                 break;
 
             case ChordEntryStage.Accidental:
-                mAccidentalEntered = buttonPressed.APIName;
-                break;
+                {
+                    mAccidentalEntered = buttonPressed.APIName;
+                    break; 
+                }
 
             case ChordEntryStage.Scale:
                 mScaleEntered = buttonPressed.APIName;
@@ -176,7 +176,13 @@
         }
     }
 
-    private async void GoButton()
+    private void HomeButton()
+    {
+        mChordEntryStage = ChordEntryStage.Note;
+        mEntryButtons = Enumerable.Range(0, 7).Select(i => new EntryButton(i, ChordEntryStage.Note)).ToArray();
+    }
+
+    private async Task GoButton()
     {
         mRequestChord = mNoteEntered + mAccidentalEntered;
         if (mScaleEntered != string.Empty)
