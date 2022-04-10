@@ -14,6 +14,8 @@ builder.Services.AddSingleton<ChordFinderService>();
 
 var app = builder.Build();
 
+Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("NjEyMDIxQDMyMzAyZTMxMmUzMGRWbk5WTkczM0dQdERxcGQxa0llWjlGTlFpc1RmQllNRjNoY1lnczcvQnc9");
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
