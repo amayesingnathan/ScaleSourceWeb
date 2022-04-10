@@ -1,0 +1,202 @@
+﻿@page "/singlechord"
+
+<PageTitle>Single Chords</PageTitle>
+
+@using ScaleSourceWeb.Data
+@inject ChordFinderService ChordService
+
+<h1>Single Chords</h1>
+
+@switch (mChordEntryStage)
+{
+    case ChordEntryStage.Note:
+    {
+        <SfButtonGroup CssClass="e-round-corner">
+            @if (mEntryButtons is not null)
+            {
+                @foreach (var noteButton in mEntryButtons)
+                {
+                    <ButtonGroupButton @bind="noteButton.Button" IsToggle="true" 
+                    IconCss="@noteButton.CSS" @onclick="() => ToggleButton(noteButton)"></ButtonGroupButton>
+                }
+            }
+        </SfButtonGroup>
+        <SfButton CssClass="e-round-corner" @onclick="NextButton">Next</SfButton>
+    }
+    break;
+
+    case ChordEntryStage.Accidental:
+    {
+        <SfButton CssClass="e-round-corner" @onclick="BackButton">Back</SfButton>
+        <SfButtonGroup CssClass="e-round-corner">
+            @if (mEntryButtons is not null)
+            {
+                @foreach (var accidentalButton in mEntryButtons)
+                {
+                    <ButtonGroupButton @bind="accidentalButton.Button" IsToggle="true" 
+                    IconCss="@accidentalButton.CSS" @onclick="() => ToggleButton(accidentalButton)"></ButtonGroupButton>
+                }
+            }
+        </SfButtonGroup>
+        <SfButton CssClass="e-round-corner" @onclick="NextButton">Next</SfButton>
+    }
+    break;
+
+    case ChordEntryStage.Scale:
+    {
+        <SfButton CssClass="e-round-corner" @onclick="BackButton">Back</SfButton>
+        <SfButtonGroup CssClass="e-round-corner">
+            @if (mEntryButtons is not null)
+            {
+                @foreach (var scaleButton in mEntryButtons)
+                {
+                    <ButtonGroupButton @bind="scaleButton.Button" IsToggle="true" 
+                    IconCss="@scaleButton.CSS" @onclick="() => ToggleButton(scaleButton)"></ButtonGroupButton>
+                }
+            }
+        </SfButtonGroup>
+        <SfButton CssClass="e-round-corner" @onclick="NextButton">Next</SfButton>
+    }
+    break;
+
+    case ChordEntryStage.Display:
+    {
+        <SfButton CssClass="e-round-corner" @onclick="BackButton">Back</SfButton>
+    }
+    break;
+}
+
+@code {
+    public static readonly string[] NoteNames = { "A", "B", "C", "D", "E", "F", "G" };
+    public static readonly string[] AccidentalNames = { "Natural", "Sharp", "Flat" };
+    public static readonly string[] ScaleNames = { "Major", "Minor" };
+
+    public enum ChordEntryStage
+    {
+        Note,
+        Accidental,
+        Scale,
+        Display
+    }
+
+    private class EntryButton
+    {
+        public SfButton? Button { get; set; }
+        public int Index { get; set; }
+        public string Name { get; set; }
+        public string CSS { get; set; }  = "e-icons e-play";
+        public bool Pressed { get; set; } = false;
+
+        public EntryButton(int i, ChordEntryStage stage) 
+        { 
+            Index = i; 
+            switch (stage)
+            {
+                case ChordEntryStage.Note:
+                    Name = NoteNames[i];
+                    break;
+
+                case ChordEntryStage.Accidental:
+                    Name = AccidentalNames[i];
+                    break;
+
+                case ChordEntryStage.Scale:
+                    Name = ScaleNames[i];
+                    break;
+
+                default:
+                    Name = "";
+                    break;
+            }
+        }
+    }
+
+    private ChordEntryStage mChordEntryStage = ChordEntryStage.Note;
+
+    private EntryButton[]? mEntryButtons = Enumerable.Range(0, 7).Select(i => new EntryButton(i, ChordEntryStage.Note)).ToArray();
+
+    private void ToggleButton(EntryButton buttonPressed)
+    {
+        if (buttonPressed.Pressed)
+            buttonPressed.CSS = "e-icons e-pause";
+        else
+            buttonPressed.CSS = "e-icons e-play";
+    }
+    
+    private void BackButton()
+    {
+        switch (mChordEntryStage)
+        {
+            case ChordEntryStage.Accidental:
+            {
+                mChordEntryStage = ChordEntryStage.Note;
+                mEntryButtons = Enumerable.Range(0, 7).Select(i => new EntryButton(i, ChordEntryStage.Note)).ToArray();
+                break;
+            }
+
+            case ChordEntryStage.Scale:
+            {
+                mChordEntryStage = ChordEntryStage.Accidental;
+                mEntryButtons = Enumerable.Range(0, 3).Select(i => new EntryButton(i, ChordEntryStage.Accidental)).ToArray();
+                break;
+            }
+
+            case ChordEntryStage.Display:
+            {
+                mChordEntryStage = ChordEntryStage.Scale;
+                mEntryButtons = Enumerable.Range(0, 2).Select(i => new EntryButton(i, ChordEntryStage.Scale)).ToArray();
+                break;
+            }
+        }
+    }
+
+    private void NextButton()
+    {
+        switch (mChordEntryStage)
+        {
+            case ChordEntryStage.Note:
+            {
+                    mChordEntryStage = ChordEntryStage.Accidental;
+                    mEntryButtons = Enumerable.Range(0, 3).Select(i => new EntryButton(i, ChordEntryStage.Accidental)).ToArray();
+                    break;
+            }
+
+            case ChordEntryStage.Accidental:
+            {
+                    mChordEntryStage = ChordEntryStage.Scale;
+                    mEntryButtons = Enumerable.Range(0, 2).Select(i => new EntryButton(i, ChordEntryStage.Scale)).ToArray();
+                    break;
+            }
+
+            case ChordEntryStage.Scale:
+            {
+                mChordEntryStage = ChordEntryStage.Display;
+                mEntryButtons = null;
+                break;
+            }
+        }
+    }
+
+    private async void DisplayChord()
+    {
+        //mCurrentChord = await ChordFinderService.FindChord("C");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        //mCurrentChord = await ChordFinderService.FindChord("C");
+    }
+}
+
+
+<style>
+
+    .e-play::before {
+        content: '\e324';
+    }
+
+    .e-pause::before {
+        content: '\e326';
+    }
+
+</style>
