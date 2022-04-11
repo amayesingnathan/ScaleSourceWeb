@@ -54,7 +54,7 @@ namespace ScaleSourceWeb.Data
                     return "";
 
                 case "Sharp":
-                    return "#";
+                    return "%23";
 
                 case "Flat":
                     return "b";

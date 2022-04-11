@@ -3,6 +3,9 @@
 <PageTitle>Single Chords</PageTitle>
 
 @using ScaleSourceWeb.Data
+@using Blazor.Extensions; 
+@using Blazor.Extensions.Canvas
+@using Blazor.Extensions.Canvas.Canvas2D
 @inject ChordFinderService ChordService
 
 <h1>Single Chords</h1>
@@ -17,7 +20,7 @@
                 @foreach (var noteButton in mEntryButtons)
                 {
                     <ButtonGroupButton @bind=@noteButton.Button IsToggle="true"
-                    @onclick="() => ToggleButton(noteButton)"> @noteButton.Name</ButtonGroupButton>
+                    @onclick="() => ToggleButton(noteButton)">@noteButton.Name</ButtonGroupButton>
                 }
             }
         </SfButtonGroup>
@@ -62,16 +65,20 @@
     case ChordEntryStage.Display:
     {
         <SfButton CssClass="e-round-corner" @onclick="HomeButton">Start</SfButton>
-        @if (mCurrentChord is null && !mRequestFailed)
-        {
-            <p><em>Loading...</em></p>
-        }
-        else if (mRequestFailed)
+        <br>
+        @if (mCurrentChord is null && mRequestFailed)
         {
             <p><em>Request failed. Check that your entered chord was valid.</em></p>
         }
+        else if (mCurrentChord is null)
+        {
+            <p><em>Loading...</em></p>
+        }
         else
         { 
+            <img @ref="mFretboardImg" src="images/frets.svg" style="display: none;"/>
+            <BECanvas @ref="mCanvasReference" Width="600" Height="400"></BECanvas>
+@*          <canvas id="ChordDisplay" width="800" height="450" ></canvas>
             <table class="table">
                 <thead>
                     <tr>
@@ -89,7 +96,7 @@
                         <td>@mCurrentChord.Tones</td>
                     </tr>
                 </tbody>
-            </table>
+            </table>*@
         }
     }
     break;
@@ -100,7 +107,7 @@
 
     private EntryButton[]? mEntryButtons = Enumerable.Range(0, 7).Select(i => new EntryButton(i, ChordEntryStage.Note)).ToArray();
 
-    private string mNoteEntered = "";
+    private string mNoteEntered = "C";
     private string mAccidentalEntered = "";
     private string mScaleEntered = "";
 
@@ -109,48 +116,50 @@
     private Chord? mCurrentChord = null;
     private bool mRequestFailed = false;
 
+    private Canvas2DContext? mContext;
+    protected BECanvasComponent? mCanvasReference;
+    private ElementReference mFretboardImg;
+
     private void ToggleButton(EntryButton buttonPressed)
     {
         switch (buttonPressed.Stage)
         {
             case ChordEntryStage.Note:
-                mNoteEntered = buttonPressed.APIName;
+                this.mNoteEntered = buttonPressed.APIName;
                 break;
 
             case ChordEntryStage.Accidental:
-                {
-                    mAccidentalEntered = buttonPressed.APIName;
-                    break; 
-                }
+                this.mAccidentalEntered = buttonPressed.APIName;
+                break; 
 
             case ChordEntryStage.Scale:
-                mScaleEntered = buttonPressed.APIName;
+                this.mScaleEntered = buttonPressed.APIName;
                 break;
         }
     }
 
     private void BackButton()
     {
-        switch (mChordEntryStage)
+        switch (this.mChordEntryStage)
         {
             case ChordEntryStage.Accidental:
                 {
-                    mChordEntryStage = ChordEntryStage.Note;
-                    mEntryButtons = Enumerable.Range(0, 7).Select(i => new EntryButton(i, ChordEntryStage.Note)).ToArray();
+                    this.mChordEntryStage = ChordEntryStage.Note;
+                    this.mEntryButtons = Enumerable.Range(0, 7).Select(i => new EntryButton(i, ChordEntryStage.Note)).ToArray();
                     break;
                 }
 
             case ChordEntryStage.Scale:
                 {
-                    mChordEntryStage = ChordEntryStage.Accidental;
-                    mEntryButtons = Enumerable.Range(0, 3).Select(i => new EntryButton(i, ChordEntryStage.Accidental)).ToArray();
+                    this.mChordEntryStage = ChordEntryStage.Accidental;
+                    this.mEntryButtons = Enumerable.Range(0, 3).Select(i => new EntryButton(i, ChordEntryStage.Accidental)).ToArray();
                     break;
                 }
 
             case ChordEntryStage.Display:
                 {
-                    mChordEntryStage = ChordEntryStage.Scale;
-                    mEntryButtons = Enumerable.Range(0, 2).Select(i => new EntryButton(i, ChordEntryStage.Scale)).ToArray();
+                    this.mChordEntryStage = ChordEntryStage.Scale;
+                    this.mEntryButtons = Enumerable.Range(0, 2).Select(i => new EntryButton(i, ChordEntryStage.Scale)).ToArray();
                     break;
                 }
         }
@@ -162,15 +171,15 @@
         {
             case ChordEntryStage.Note:
                 {
-                    mChordEntryStage = ChordEntryStage.Accidental;
-                    mEntryButtons = Enumerable.Range(0, 3).Select(i => new EntryButton(i, ChordEntryStage.Accidental)).ToArray();
+                    this.mChordEntryStage = ChordEntryStage.Accidental;
+                    this.mEntryButtons = Enumerable.Range(0, 3).Select(i => new EntryButton(i, ChordEntryStage.Accidental)).ToArray();
                     break;
                 }
 
             case ChordEntryStage.Accidental:
                 {
-                    mChordEntryStage = ChordEntryStage.Scale;
-                    mEntryButtons = Enumerable.Range(0, 2).Select(i => new EntryButton(i, ChordEntryStage.Scale)).ToArray();
+                    this.mChordEntryStage = ChordEntryStage.Scale;
+                    this.mEntryButtons = Enumerable.Range(0, 2).Select(i => new EntryButton(i, ChordEntryStage.Scale)).ToArray();
                     break;
                 }
         }
@@ -178,20 +187,47 @@
 
     private void HomeButton()
     {
-        mChordEntryStage = ChordEntryStage.Note;
-        mEntryButtons = Enumerable.Range(0, 7).Select(i => new EntryButton(i, ChordEntryStage.Note)).ToArray();
+        this.mChordEntryStage = ChordEntryStage.Note;
+        this.mEntryButtons = Enumerable.Range(0, 7).Select(i => new EntryButton(i, ChordEntryStage.Note)).ToArray();
     }
 
     private async Task GoButton()
     {
-        mRequestChord = mNoteEntered + mAccidentalEntered;
-        if (mScaleEntered != string.Empty)
-            mRequestChord += "_" + mScaleEntered;
+        this.mRequestChord = this.mNoteEntered + this.mAccidentalEntered;
+        if (this.mScaleEntered != string.Empty)
+            this.mRequestChord += $"_{this.mScaleEntered}";
 
-        mCurrentChord = await ChordFinderService.FindChord(mRequestChord);
-        mRequestFailed = (mCurrentChord is null) ? true : false;
+        this.mCurrentChord = await ChordFinderService.FindChord(this.mRequestChord);
+        this.mRequestFailed = (mCurrentChord is null) ? true : false;
 
-        mEntryButtons = null;
-        mChordEntryStage = ChordEntryStage.Display;
+        this.mEntryButtons = null;
+        this.mChordEntryStage = ChordEntryStage.Display;
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (this.mChordEntryStage != ChordEntryStage.Display) return;
+
+        this.mContext = await this.mCanvasReference.CreateCanvas2DAsync();
+
+        await this.mContext.DrawImageAsync(this.mFretboardImg, 60, 40, 480, 320);
+        await DrawChord();
+    }
+
+    private async Task DrawChord()
+    {
+        if (mCurrentChord is null) return;
+        if (this.mContext is null) return;
+
+        await DrawCircle(2, 0);
+    }
+
+    private async Task DrawCircle(int x, int y)
+    {
+        await this.mContext.BeginPathAsync();
+        await this.mContext.ArcAsync((x * 96) + 33, (y * 40) + 43, 24, 0, 2 * Math.PI);
+        await this.mContext.SetLineWidthAsync(5);
+        await this.mContext.StrokeAsync();
+    }
+
 }

@@ -2,7 +2,7 @@
 
 namespace ScaleSourceWeb.Data
 {
-    public class ChordFinderService
+    class ChordFinderService
     {
 
         static HttpClient sClient = new HttpClient();
