@@ -3,6 +3,7 @@
 <PageTitle>Single Chords</PageTitle>
 
 @using ScaleSourceWeb.Data
+@using ChordCanvas
 @using Blazor.Extensions; 
 @using Blazor.Extensions.Canvas
 @using Blazor.Extensions.Canvas.Canvas2D
@@ -207,27 +208,12 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (this.mChordEntryStage != ChordEntryStage.Display) return;
+        if (this.mCurrentChord is null) return;
 
         this.mContext = await this.mCanvasReference.CreateCanvas2DAsync();
 
-        await this.mContext.DrawImageAsync(this.mFretboardImg, 60, 40, 480, 320);
-        await DrawChord();
-    }
+        await ChordBoxImage.CreateImage(this.mContext, mCurrentChord, ChordBoxImage.Layout.Two, 8.0);
 
-    private async Task DrawChord()
-    {
-        if (mCurrentChord is null) return;
-        if (this.mContext is null) return;
-
-        await DrawCircle(2, 0);
-    }
-
-    private async Task DrawCircle(int x, int y)
-    {
-        await this.mContext.BeginPathAsync();
-        await this.mContext.ArcAsync((x * 96) + 33, (y * 40) + 43, 24, 0, 2 * Math.PI);
-        await this.mContext.SetLineWidthAsync(5);
-        await this.mContext.StrokeAsync();
     }
 
 }
