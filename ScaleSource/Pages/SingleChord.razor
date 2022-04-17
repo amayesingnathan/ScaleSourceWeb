@@ -1,4 +1,5 @@
-﻿@page "/singlechord"
+﻿@page "/"
+@page "/singlechord"
 
 <PageTitle>Single Chords</PageTitle>
 
@@ -11,82 +12,49 @@
 
 <h1>Single Chords</h1>
 
-@switch (mChordEntryStage)
+<SfButtonGroup CssClass="e-round-corner">
+@foreach (var noteButton in mNoteButtons)
 {
-    case ChordEntryStage.Note:
-    {
-        <SfButtonGroup CssClass="e-round-corner">
-            @if (mEntryButtons is not null)
-            {
-                @foreach (var noteButton in mEntryButtons)
-                {
-                    <ButtonGroupButton @bind=@noteButton.Button IsToggle="true"
-                    @onclick="() => ToggleButton(noteButton)">@noteButton.Name</ButtonGroupButton>
-                }
-            }
-        </SfButtonGroup>
-        <SfButton CssClass="e-round-corner" @onclick="NextButton">Next</SfButton>
-    }
-    break;
-
-    case ChordEntryStage.Accidental:
-    {
-        <SfButton CssClass="e-round-corner" @onclick="BackButton">Back</SfButton>
-        <SfButtonGroup CssClass="e-round-corner">
-            @if (mEntryButtons is not null)
-            {
-                @foreach (var accidentalButton in mEntryButtons)
-                {
-                    <ButtonGroupButton @bind=@accidentalButton.Button IsToggle="true" 
-                    @onclick="() => ToggleButton(accidentalButton)">@accidentalButton.Name</ButtonGroupButton>
-                }
-            }
-        </SfButtonGroup>
-        <SfButton CssClass="e-round-corner" @onclick="NextButton">Next</SfButton>
-    }
-    break;
-
-    case ChordEntryStage.Scale:
-    {
-        <SfButton CssClass="e-round-corner" @onclick="BackButton">Back</SfButton>
-        <SfButtonGroup CssClass="e-round-corner">
-            @if (mEntryButtons is not null)
-            {
-                @foreach (var scaleButton in mEntryButtons)
-                {
-                    <ButtonGroupButton @bind=@scaleButton.Button IsToggle="true" 
-                    @onclick="() => ToggleButton(scaleButton)">@scaleButton.Name</ButtonGroupButton>
-                }
-            }
-        </SfButtonGroup>
-        <SfButton CssClass="e-round-corner" @onclick="GoButton">Go</SfButton>
-    }
-    break;
-
-    case ChordEntryStage.Display:
-    {
-        <SfButton CssClass="e-round-corner" @onclick="HomeButton">Start</SfButton>
-        <br>
-        @if (mCurrentChord is null && mRequestFailed)
-        {
-            <p><em>Request failed. Check that your entered chord was valid.</em></p>
-        }
-        else if (mCurrentChord is null)
-        {
-            <p><em>Loading...</em></p>
-        }
-        else
-        { 
-            <BECanvas @ref="mCanvasReference" Width="1200" Height="800"></BECanvas>
-        }
-    }
-    break;
+    <ButtonGroupButton @bind=@noteButton.Button IsToggle="true"
+    @onclick="async() => await ToggleButton(noteButton)">@noteButton.Name</ButtonGroupButton>
 }
+</SfButtonGroup>
+
+<br />
+
+<SfButtonGroup CssClass="e-round-corner">
+@foreach (var accidentalButton in mAccButtons)
+{
+    <ButtonGroupButton @bind=@accidentalButton.Button IsToggle="true" 
+    @onclick="async() => await ToggleButton(accidentalButton)">@accidentalButton.Name</ButtonGroupButton>
+}
+</SfButtonGroup>
+
+<br />
+
+<SfButtonGroup CssClass="e-round-corner">
+@foreach (var scaleButton in mScaleButtons)
+{
+    <ButtonGroupButton @bind=@scaleButton.Button IsToggle="true" 
+    @onclick="async() => await ToggleButton(scaleButton)">@scaleButton.Name</ButtonGroupButton>
+}
+</SfButtonGroup>
+
+<br />
+
+@if (mRequestFailed)
+{
+    <p>Request Failed. The entered chord may have been invalid.</p>
+}
+
+<BECanvas @ref="mCanvasReference" Width="1200" Height="800"></BECanvas>
 
 @code {
     private ChordEntryStage mChordEntryStage = ChordEntryStage.Note;
 
-    private EntryButton[]? mEntryButtons = Enumerable.Range(0, 7).Select(i => new EntryButton(i, ChordEntryStage.Note)).ToArray();
+    private EntryButton[] mNoteButtons = Enumerable.Range(0, 7).Select(i => new EntryButton(i, ChordEntryStage.Note)).ToArray();
+    private EntryButton[] mAccButtons = Enumerable.Range(0, 3).Select(i => new EntryButton(i, ChordEntryStage.Accidental)).ToArray();
+    private EntryButton[] mScaleButtons = Enumerable.Range(0, 2).Select(i => new EntryButton(i, ChordEntryStage.Scale)).ToArray();
 
     private string mNoteEntered = "C";
     private string mAccidentalEntered = "";
@@ -100,7 +68,17 @@
     private Canvas2DContext? mContext;
     protected BECanvasComponent? mCanvasReference;
 
-    private void ToggleButton(EntryButton buttonPressed)
+    private async Task RequestChord()
+    {
+        mRequestChord = mNoteEntered + mAccidentalEntered;
+        if (mScaleEntered != string.Empty)
+            mRequestChord += $"_{mScaleEntered}";
+
+        mCurrentChord = await ChordFinderService.FindChord(mRequestChord);
+        mRequestFailed = (mCurrentChord is null) ? true : false;
+    }
+
+    private async Task ToggleButton(EntryButton buttonPressed)
     {
         switch (buttonPressed.Stage)
         {
@@ -116,91 +94,25 @@
                 mScaleEntered = buttonPressed.APIName;
                 break;
         }
+
+        await RequestChord();
     }
 
-    private void BackButton()
+    protected override async Task OnInitializedAsync()
     {
-        switch (mChordEntryStage)
-        {
-            case ChordEntryStage.Accidental:
-                {
-                    mChordEntryStage = ChordEntryStage.Note;
-                    mEntryButtons = Enumerable.Range(0, 7).Select(i => new EntryButton(i, ChordEntryStage.Note)).ToArray();
-                    break;
-                }
-
-            case ChordEntryStage.Scale:
-                {
-                    mChordEntryStage = ChordEntryStage.Accidental;
-                    mEntryButtons = Enumerable.Range(0, 3).Select(i => new EntryButton(i, ChordEntryStage.Accidental)).ToArray();
-                    break;
-                }
-
-            case ChordEntryStage.Display:
-                {
-                    mChordEntryStage = ChordEntryStage.Scale;
-                    mEntryButtons = Enumerable.Range(0, 2).Select(i => new EntryButton(i, ChordEntryStage.Scale)).ToArray();
-                    break;
-                }
-        }
-    }
-
-    private void NextButton()
-    {
-        switch (mChordEntryStage)
-        {
-            case ChordEntryStage.Note:
-                {
-                    mChordEntryStage = ChordEntryStage.Accidental;
-                    mEntryButtons = Enumerable.Range(0, 3).Select(i => new EntryButton(i, ChordEntryStage.Accidental)).ToArray();
-                    break;
-                }
-
-            case ChordEntryStage.Accidental:
-                {
-                    mChordEntryStage = ChordEntryStage.Scale;
-                    mEntryButtons = Enumerable.Range(0, 2).Select(i => new EntryButton(i, ChordEntryStage.Scale)).ToArray();
-                    break;
-                }
-        }
-    }
-
-    private void HomeButton()
-    {
-        mNoteEntered = "C"; mAccidentalEntered = ""; mScaleEntered = "";
-
-        mChordEntryStage = ChordEntryStage.Note;
-        mEntryButtons = Enumerable.Range(0, 7).Select(i => new EntryButton(i, ChordEntryStage.Note)).ToArray();
-
-        if (mContext is null) return;
-
-        mContext = null;
-    }
-
-    private async Task GoButton()
-    {
-        mRequestChord = mNoteEntered + mAccidentalEntered;
-        if (mScaleEntered != string.Empty)
-            mRequestChord += $"_{mScaleEntered}";
-
-        mCurrentChord = await ChordFinderService.FindChord(mRequestChord);
-        mRequestFailed = (mCurrentChord is null) ? true : false;
-
-        mEntryButtons = null;
-        mChordEntryStage = ChordEntryStage.Display;
+        await RequestChord();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (mChordEntryStage != ChordEntryStage.Display) return;
         if (mCurrentChord is null) return;
         if (mRequestFailed) return;
 
         if (mContext is null)
             mContext = await mCanvasReference.CreateCanvas2DAsync();
-            
+                
         await mContext.ClearRectAsync(0, 0, mCanvasReference.Width, mCanvasReference.Height);
-        await ChordBoxImage.CreateImage(mContext, mCurrentChord, ChordBoxImage.Layout.Two, 8.0);
+        await ChordBoxImage.CreateImage(mContext, mCurrentChord, ChordBoxImage.Layout.Two, 12.0);
 
     }
 
