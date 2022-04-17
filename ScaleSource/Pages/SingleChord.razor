@@ -77,7 +77,7 @@
         }
         else
         { 
-            <BECanvas @ref="mCanvasReference" Width="600" Height="400"></BECanvas>
+            <BECanvas @ref="mCanvasReference" Width="1200" Height="800"></BECanvas>
         }
     }
     break;
@@ -99,7 +99,6 @@
 
     private Canvas2DContext? mContext;
     protected BECanvasComponent? mCanvasReference;
-    private ElementReference mFretboardImg;
 
     private void ToggleButton(EntryButton buttonPressed)
     {
@@ -166,16 +165,15 @@
         }
     }
 
-    private async Task HomeButton()
+    private void HomeButton()
     {
         mNoteEntered = "C"; mAccidentalEntered = ""; mScaleEntered = "";
 
         mChordEntryStage = ChordEntryStage.Note;
         mEntryButtons = Enumerable.Range(0, 7).Select(i => new EntryButton(i, ChordEntryStage.Note)).ToArray();
 
-        if (mContext is null || mCanvasReference is null) return;
+        if (mContext is null) return;
 
-        await mContext.ClearRectAsync(0, 0, mCanvasReference.Width, mCanvasReference.Height);
         mContext = null;
     }
 

@@ -2,7 +2,7 @@
 
 namespace ChordCanvas
 {
-    public class ChordBoxImage
+    public static class ChordBoxImage
     {
 
         public enum Layout
@@ -70,7 +70,7 @@ namespace ChordCanvas
             public Chord.Fingers Finger { get; set; }
         }
 
-        private class Graphics
+        private static class Graphics
         {
             public static async Task DrawLine(Pen pen, double x1, double y1, double x2, double y2)
             {
@@ -112,15 +112,10 @@ namespace ChordCanvas
                 await _ctx.ArcAsync(x1 + radius, y1 + radius, radius, 0, 2 * Math.PI, false);
                 await _ctx.FillAsync();
             }
-            public static async Task<FontSize> MeasureString(string text, Font font)
+            public static async Task<double> MeasureString(string text)
             {    
-                await font.Set();
                 var metrics = await _ctx.MeasureTextAsync(text);
-
-                FontSize result = new FontSize();
-                result.Width = metrics.Width;
-                result.Height = (await _ctx.MeasureTextAsync("M")).Width; // calculating the width of the letter 'M' a good approximation of the line height
-                return result;
+                return metrics.Width;
             }
             public static async Task DrawString(string text, Font font, string color, double x, double y)
             {
@@ -208,7 +203,7 @@ namespace ChordCanvas
             FretFontSize = FretWidth / perc;
             FingerFontSize = FretWidth * 0.8;
             GuitarStringFontSize = FretWidth * 0.8;
-            NameFontSize = FretWidth * 2 / perc;
+            NameFontSize = (FretWidth * 2) / perc;
             SuperScriptFontSize = 0.7 * NameFontSize;
             if (_Size == 1)
             {
@@ -340,9 +335,7 @@ namespace ChordCanvas
         private static async Task DrawChordPositionsAndFingers()
         {
             double yoffset = yStart - FretWidth;
-            double xoffset = LineWidth / 2;
             double totalFretWidth = FretWidth + LineWidth;
-            double xfirstString = xStart + 0.5 * LineWidth;
             Font font = new Font(_ctx, _FontName, FingerFontSize);
 
             for (int i = 0; i < _ChordPositions.Count(); i++)
@@ -353,20 +346,20 @@ namespace ChordCanvas
                 double xpos = xStart - (0.5 * FretWidth) + (0.5 * LineWidth) + (i * totalFretWidth);
                 if (relativePos > 0)
                 {
-                    double ypos = relativePos * totalFretWidth + yoffset;
+                    double ypos = relativePos * totalFretWidth + yoffset + 0.25 * DotWidth;
                     await Graphics.FillCircle(_ForegroundBrush, xpos, ypos, DotWidth);
 
                     Chord.Fingers finger = _Fingers[i];
                     if (finger != Chord.Fingers.NoFinger)
                     {
-                        var charSize = await Graphics.MeasureString(finger.ToString("d"), font);
-                        await Graphics.DrawString(finger.ToString("d"), font, _BackgroundBrush, xpos - (0.5 * charSize.Width) + DotWidth / 2, ypos - (0.5 * charSize.Height) + DotWidth / 2);
+                        double charWidth = await Graphics.MeasureString(finger.ToString("d"));
+                        await Graphics.DrawString(finger.ToString("d"), font, _BackgroundBrush, xpos - (0.5 * charWidth) + DotWidth / 2, ypos);
                     }
                 }
                 else if (absolutePos == 0)
                 {
                     Pen pen = new Pen(_ctx, _ForegroundBrush, LineWidth);
-                    double ypos = yStart - FretWidth;
+                    double ypos = yStart - FretWidth + 0.25 * DotWidth;
                     var markerXpos = xpos + ((DotWidth - MarkerWidth) / 2);
                     if (BaseFret == 1)
                         ypos -= NutHeight;
@@ -376,14 +369,14 @@ namespace ChordCanvas
                     Chord.Fingers finger = _Fingers[i];
                     if (finger != Chord.Fingers.NoFinger)
                     {
-                        var charSize = await Graphics.MeasureString(finger.ToString("d"), font);
-                        await Graphics.DrawString(finger.ToString("d"), font, _BackgroundBrush, xpos - (0.5 * charSize.Width) + DotWidth / 2, ypos - (0.5 * charSize.Height) + DotWidth / 2);
+                        double charWidth = await Graphics.MeasureString(finger.ToString("d"));
+                        await Graphics.DrawString(finger.ToString("d"), font, _BackgroundBrush, xpos - (0.5 * charWidth) + DotWidth / 2, ypos);
                     }
                 }
                 else if (absolutePos == -1)
                 {
                     Pen pen = new Pen(_ctx, _ForegroundBrush, LineWidth * 1.5);
-                    var ypos = yStart - FretWidth;
+                    var ypos = yStart - FretWidth + 0.25 * DotWidth;
                     var markerXpos = xpos + ((DotWidth - MarkerWidth) / 2);
                     if (BaseFret == 1)
                     {
@@ -395,8 +388,8 @@ namespace ChordCanvas
                     Chord.Fingers finger = _Fingers[i];
                     if (finger != Chord.Fingers.NoFinger)
                     {
-                        var charSize = await Graphics.MeasureString(finger.ToString("d"), font);
-                        await Graphics.DrawString(finger.ToString("d"), font, _BackgroundBrush, xpos - (0.5 * charSize.Width) + DotWidth / 2, ypos - (0.5 * charSize.Height) + DotWidth / 2);
+                        double charWidth = await Graphics.MeasureString(finger.ToString("d"));
+                        await Graphics.DrawString(finger.ToString("d"), font, _BackgroundBrush, xpos - (0.5 * charWidth) + DotWidth / 2, ypos);
                     }
                 }
             }
@@ -405,14 +398,14 @@ namespace ChordCanvas
         private static async Task DrawFingers()
         {
             double xpos = xStart;
-            double ypos = yStart + BoxHeight;
+            double ypos = yStart + BoxHeight + 0.25 * DotWidth;
             Font font = new Font(_ctx, _FontName, FingerFontSize);
             foreach (var finger in _Fingers)
             {
                 if (finger != Chord.Fingers.NoFinger)
                 {
-                    FontSize charSize = await Graphics.MeasureString(finger.ToString("d"), font);
-                    await Graphics.DrawString(finger.ToString("d"), font, _ForegroundBrush, xpos - (0.5 * charSize.Width), ypos - 0.5 * (charSize.Height - DotWidth));
+                    double charWidth = await Graphics.MeasureString(finger.ToString("d"));
+                    await Graphics.DrawString(finger.ToString("d"), font, _ForegroundBrush, xpos - (0.5 * charWidth), ypos);
                 }
                 xpos += (FretWidth + LineWidth);
             }
@@ -420,13 +413,13 @@ namespace ChordCanvas
 
         private static async Task DrawStringNames()
         {
-            double xpos = xStart + (0.5 * LineWidth);
+            double xpos = xStart + (0.25 * LineWidth);
             double ypos = yStart + BoxHeight;
             Font font = new Font(_ctx, _FontName, GuitarStringFontSize);
             foreach (string guitarString in _StringNames)
-            { 
-                FontSize charSize = await Graphics.MeasureString(guitarString, font);
-                await Graphics.DrawString(guitarString, font, _ForegroundBrush, xpos - (0.5 * charSize.Width), ypos);
+            {
+                double charWidth = await Graphics.MeasureString(guitarString);
+                await Graphics.DrawString(guitarString, font, _ForegroundBrush, xpos - (0.5 * charWidth), ypos);
                 xpos += (FretWidth + LineWidth);
             }
         }
@@ -448,17 +441,17 @@ namespace ChordCanvas
                 name = parts[0];
                 supers = parts[1];
             }
-            FontSize stringSize = await Graphics.MeasureString(name, nameFont);
+            double stringWidth = await Graphics.MeasureString(name);
 
             double xTextStart = xStart;
-            if (stringSize.Width < BoxWidth)
+            if (stringWidth < BoxWidth)
             {
-                xTextStart = xStart + ((BoxWidth - stringSize.Width) / 2);
+                xTextStart = xStart + ((BoxWidth - stringWidth) / 2);
             }
-            await Graphics.DrawString(name, nameFont, _ForegroundBrush, xTextStart, 0.2 * SuperScriptFontSize);
+            await Graphics.DrawString(name, nameFont, _ForegroundBrush, xTextStart, 0.1 * SuperScriptFontSize);
             if (supers != "")
             {
-                await Graphics.DrawString(supers, superFont, _ForegroundBrush, xTextStart + 0.8 * stringSize.Width, 0);
+                await Graphics.DrawString(supers, superFont, _ForegroundBrush, xTextStart + 0.8 * stringWidth, 0);
             }
 
             if (BaseFret > 1)
