@@ -79,25 +79,6 @@
         { 
             <img @ref="mFretboardImg" src="images/frets.svg" style="display: none;"/>
             <BECanvas @ref="mCanvasReference" Width="600" Height="400"></BECanvas>
-@*          <canvas id="ChordDisplay" width="800" height="450" ></canvas>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Chord Name</th>
-                        <th>String</th>
-                        <th>Fingering</th>
-                        <th>Notes</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>@mCurrentChord.ChordName</td>
-                        <td>@mCurrentChord.Strings</td>
-                        <td>@mCurrentChord.Fingering</td>
-                        <td>@mCurrentChord.Tones</td>
-                    </tr>
-                </tbody>
-            </table>*@
         }
     }
     break;
@@ -186,10 +167,14 @@
         }
     }
 
-    private void HomeButton()
+    private async Task HomeButton()
     {
         this.mChordEntryStage = ChordEntryStage.Note;
         this.mEntryButtons = Enumerable.Range(0, 7).Select(i => new EntryButton(i, ChordEntryStage.Note)).ToArray();
+
+        if (this.mContext is null || this.mCanvasReference is null) return;
+
+        await this.mContext.ClearRectAsync(0, 0, this.mCanvasReference.Width, this.mCanvasReference.Height);
     }
 
     private async Task GoButton()

@@ -1,6 +1,8 @@
 ﻿using System.Net.Http.Headers;
 using ChordCanvas;
 
+#pragma warning disable 8619
+
 namespace ScaleSourceWeb.Data
 {
     class ChordFinderService
@@ -31,7 +33,7 @@ namespace ScaleSourceWeb.Data
             {
                 var result = await response.Content.ReadAsAsync<List<Chord>>();
                 chord = result.FirstOrDefault();
-                if (chord is not null && chord.ChordName is not null)
+                if (chord is not null)
                     chord.ChordName = chord.ChordName.Replace(",", "");
             }
 
