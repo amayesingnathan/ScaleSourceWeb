@@ -24,7 +24,7 @@
 
   <ItemGroup>
     <Reference Include="System.Net.Http.Formatting">
-      <HintPath>..\..\..\..\..\..\..\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\Extensions\0ndvibwb.dm2\System.Net.Http.Formatting.dll</HintPath>
+      <HintPath>C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\Extensions\0ndvibwb.dm2\System.Net.Http.Formatting.dll</HintPath>
     </Reference>
   </ItemGroup>
 

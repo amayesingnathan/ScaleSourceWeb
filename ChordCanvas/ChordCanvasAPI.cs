@@ -171,18 +171,24 @@ namespace ChordCanvas
 
         private static void ParseChord()
         {
-            int minFret = 1;
-            BaseFret = minFret;
+            int minFret = int.MaxValue;
+            int maxFret = 0;
+            BaseFret = 1;
 
             foreach (var fret in _ChordPositions)
             {
-                if (fret == -1 || fret == 0)
+                if (fret == -1)
                     continue;
 
-                minFret = Math.Max(fret, minFret);
+                maxFret = Math.Max(fret, maxFret);
+
+                if (fret == 0)
+                    continue;
+
+                minFret = Math.Min(fret, minFret);
             }
 
-            if (minFret > 5)
+            if (maxFret > 5)
                 BaseFret = minFret;
         }
 
@@ -198,7 +204,7 @@ namespace ChordCanvas
             BoxHeight = _FretCount * (FretWidth + LineWidth) + LineWidth;
 
             //Find out font sizes
-            double perc = 4;
+            double perc = 2;
             FretFontSize = FretWidth / perc;
             FingerFontSize = FretWidth * 0.8;
             GuitarStringFontSize = FretWidth * 0.8;
@@ -292,19 +298,15 @@ namespace ChordCanvas
 
         private static async Task DrawChordPositions()
         {
+            double xpos = xStart - (0.5 * FretWidth) + (0.5 * LineWidth);
             double yoffset = yStart - FretWidth;
-            double xoffset = LineWidth / 2;
-            double totalFretWidth = FretWidth + LineWidth;
-            double xfirstString = xStart + 0.5 * LineWidth;
-            for (int i = 0; i < _ChordPositions.Count(); i++)
+            foreach (var absolutePos in _ChordPositions)
             {
-                int absolutePos = _ChordPositions[i];
                 int relativePos = absolutePos - BaseFret + 1;
 
-                double xpos = xStart - (0.5 * FretWidth) + (0.5 * LineWidth) + (i * totalFretWidth);
                 if (relativePos > 0)
                 {
-                    double ypos = relativePos * totalFretWidth + yoffset;
+                    double ypos = relativePos * (FretWidth + LineWidth) + yoffset;
                     await Graphics.FillCircle(_ForegroundBrush, xpos, ypos, DotWidth);
                 }
                 else if (absolutePos == 0)
@@ -330,6 +332,8 @@ namespace ChordCanvas
                     await Graphics.DrawLine(pen, markerXpos, ypos, markerXpos + MarkerWidth, ypos + MarkerWidth);
                     await Graphics.DrawLine(pen, markerXpos, ypos + MarkerWidth, markerXpos + MarkerWidth, ypos);
                 }
+
+                xpos += FretWidth + LineWidth;
             }
         }
 
@@ -355,8 +359,8 @@ namespace ChordCanvas
                     Chord.Fingers finger = _Fingers[i];
                     if (finger != Chord.Fingers.NoFinger)
                     {
-                        var charSize = await Graphics.MeasureString(finger.ToString(), font);
-                        await Graphics.DrawString(finger.ToString(), font, _BackgroundBrush, xpos - (0.5 * charSize.Width) + DotWidth / 2, ypos - (0.5 * charSize.Height) + DotWidth / 2);
+                        var charSize = await Graphics.MeasureString(finger.ToString("d"), font);
+                        await Graphics.DrawString(finger.ToString("d"), font, _BackgroundBrush, xpos - (0.5 * charSize.Width) + DotWidth / 2, ypos - (0.5 * charSize.Height) + DotWidth / 2);
                     }
                 }
                 else if (absolutePos == 0)
@@ -372,8 +376,8 @@ namespace ChordCanvas
                     Chord.Fingers finger = _Fingers[i];
                     if (finger != Chord.Fingers.NoFinger)
                     {
-                        var charSize = await Graphics.MeasureString(finger.ToString(), font);
-                        await Graphics.DrawString(finger.ToString(), font, _BackgroundBrush, xpos - (0.5 * charSize.Width) + DotWidth / 2, ypos - (0.5 * charSize.Height) + DotWidth / 2);
+                        var charSize = await Graphics.MeasureString(finger.ToString("d"), font);
+                        await Graphics.DrawString(finger.ToString("d"), font, _BackgroundBrush, xpos - (0.5 * charSize.Width) + DotWidth / 2, ypos - (0.5 * charSize.Height) + DotWidth / 2);
                     }
                 }
                 else if (absolutePos == -1)
@@ -391,8 +395,8 @@ namespace ChordCanvas
                     Chord.Fingers finger = _Fingers[i];
                     if (finger != Chord.Fingers.NoFinger)
                     {
-                        var charSize = await Graphics.MeasureString(finger.ToString(), font);
-                        await Graphics.DrawString(finger.ToString(), font, _BackgroundBrush, xpos - (0.5 * charSize.Width) + DotWidth / 2, ypos - (0.5 * charSize.Height) + DotWidth / 2);
+                        var charSize = await Graphics.MeasureString(finger.ToString("d"), font);
+                        await Graphics.DrawString(finger.ToString("d"), font, _BackgroundBrush, xpos - (0.5 * charSize.Width) + DotWidth / 2, ypos - (0.5 * charSize.Height) + DotWidth / 2);
                     }
                 }
             }
@@ -400,15 +404,15 @@ namespace ChordCanvas
 
         private static async Task DrawFingers()
         {
-            double xpos = xStart + 0.5 * (LineWidth + FretWidth);
+            double xpos = xStart;
             double ypos = yStart + BoxHeight;
             Font font = new Font(_ctx, _FontName, FingerFontSize);
             foreach (var finger in _Fingers)
-            { 
+            {
                 if (finger != Chord.Fingers.NoFinger)
                 {
-                    FontSize charSize = await Graphics.MeasureString(finger.ToString(), font);
-                    await Graphics.DrawString(finger.ToString("d"), font, _ForegroundBrush, xpos - (0.5 * charSize.Width), ypos - (0.5 * charSize.Height) + DotWidth / 2);
+                    FontSize charSize = await Graphics.MeasureString(finger.ToString("d"), font);
+                    await Graphics.DrawString(finger.ToString("d"), font, _ForegroundBrush, xpos - (0.5 * charSize.Width), ypos - 0.5 * (charSize.Height - DotWidth));
                 }
                 xpos += (FretWidth + LineWidth);
             }
