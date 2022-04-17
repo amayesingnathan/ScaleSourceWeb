@@ -463,7 +463,7 @@ namespace ChordCanvas
         }
 
 
-        public static async Task CreateImage(Canvas2DContext ctx, Chord chord, Layout layout, double size)
+        public static async Task CreateImage(Canvas2DContext ctx, Chord chord, Layout layout, double size, double w, double h)
         {
             _ctx = ctx;
             _ChordPositions = chord.FretList.ToList();
@@ -473,6 +473,7 @@ namespace ChordCanvas
             InitSizes(size);
             ParseChord();
 
+            await _ctx.ClearRectAsync(0, 0, w, h);
             await Graphics.FillRectangle(_BackgroundBrush, 0, 0, ImageWidth, ImageHeight);
 
             switch (layout)

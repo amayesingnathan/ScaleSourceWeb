@@ -48,10 +48,11 @@
 }
 
 <BECanvas @ref="mCanvasReference" Width="1200" Height="800"></BECanvas>
+<div class="HiddenCanvas">
+    <BECanvas @ref="mCanvasReferenceHidden" Width="1200" Height="800"></BECanvas>
+</div>
 
 @code {
-    private ChordEntryStage mChordEntryStage = ChordEntryStage.Note;
-
     private EntryButton[] mNoteButtons = Enumerable.Range(0, 7).Select(i => new EntryButton(i, ChordEntryStage.Note)).ToArray();
     private EntryButton[] mAccButtons = Enumerable.Range(0, 3).Select(i => new EntryButton(i, ChordEntryStage.Accidental)).ToArray();
     private EntryButton[] mScaleButtons = Enumerable.Range(0, 2).Select(i => new EntryButton(i, ChordEntryStage.Scale)).ToArray();
@@ -67,6 +68,8 @@
 
     private Canvas2DContext? mContext;
     protected BECanvasComponent? mCanvasReference;
+    private Canvas2DContext? mContextHidden;
+    protected BECanvasComponent? mCanvasReferenceHidden;
 
     private async Task RequestChord()
     {
@@ -105,15 +108,16 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (mCanvasReference is null || mCanvasReferenceHidden is null) return;
         if (mCurrentChord is null) return;
         if (mRequestFailed) return;
 
-        if (mContext is null)
-            mContext = await mCanvasReference.CreateCanvas2DAsync();
-                
-        await mContext.ClearRectAsync(0, 0, mCanvasReference.Width, mCanvasReference.Height);
-        await ChordBoxImage.CreateImage(mContext, mCurrentChord, ChordBoxImage.Layout.Two, 12.0);
+        mContext = await mCanvasReference.CreateCanvas2DAsync();
+        mContextHidden = await mCanvasReferenceHidden.CreateCanvas2DAsync();
 
+        await ChordBoxImage.CreateImage(mContextHidden, mCurrentChord, ChordBoxImage.Layout.Two, 12.0, mCanvasReference.Width, mCanvasReference.Height);
+
+        await mContext.DrawImageAsync(mCanvasReferenceHidden.CanvasReference, 0, 0);
     }
 
 }
