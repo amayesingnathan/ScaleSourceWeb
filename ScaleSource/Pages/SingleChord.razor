@@ -108,15 +108,15 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (mCanvasReference is null || mCanvasReferenceHidden is null) return;
-        if (mCurrentChord is null) return;
-        if (mRequestFailed) return;
+        if (firstRender)
+        {
+            mContext = await mCanvasReference.CreateCanvas2DAsync();
+            mContextHidden = await mCanvasReferenceHidden.CreateCanvas2DAsync();
+        }
 
-        mContext = await mCanvasReference.CreateCanvas2DAsync();
-        mContextHidden = await mCanvasReferenceHidden.CreateCanvas2DAsync();
+        if (mCurrentChord is null) return;
 
         await ChordBoxImage.CreateImage(mContextHidden, mCurrentChord, ChordBoxImage.Layout.Two, 12.0, mCanvasReference.Width, mCanvasReference.Height);
-
         await mContext.DrawImageAsync(mCanvasReferenceHidden.CanvasReference, 0, 0);
     }
 
