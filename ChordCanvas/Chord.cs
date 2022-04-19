@@ -17,7 +17,7 @@
             stringName => (stringName.Equals("X") ? -1 : Int32.Parse(stringName)));
         public string Fingering { get; set; } = "";
         public IEnumerable<Fingers> FingeringList => Fingering.Split(" ").Select(
-            fingerName => (Fingers) (fingerName.Equals("X") ? -1 : Int32.Parse(fingerName)));
+            fingerName => (Fingers)(fingerName.Equals("X") ? -1 : Int32.Parse(fingerName)));
         public string ChordName { get; set; } = "";
         public string EnharmonicChordName { get; set; } = "";
         public string VoicingID { get; set; } = "";

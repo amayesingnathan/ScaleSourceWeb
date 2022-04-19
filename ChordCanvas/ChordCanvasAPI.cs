@@ -4,7 +4,6 @@ namespace ChordCanvas
 {
     public static class ChordBoxImage
     {
-
         public enum Layout
         { 
             One,
@@ -112,16 +111,13 @@ namespace ChordCanvas
                 await _ctx.ArcAsync(x1 + radius, y1 + radius, radius, 0, 2 * Math.PI, false);
                 await _ctx.FillAsync();
             }
-            public static async Task<double> MeasureString(string text)
-            {    
-                var metrics = await _ctx.MeasureTextAsync(text);
-                return metrics.Width;
-            }
-            public static async Task DrawString(string text, Font font, string color, double x, double y)
+
+            public static async Task DrawString(string text, Font font, string color, double x, double y, TextAlign align = TextAlign.Center)
             {
                 if (_ctx is null) return;
 
                 await font.Set();
+                await _ctx.SetTextAlignAsync(align);
                 await _ctx.SetFillStyleAsync(color);
                 await _ctx.FillTextAsync(text, x, y);    
             }
@@ -148,8 +144,6 @@ namespace ChordCanvas
         private static double NutHeight;
 
         private static double DotWidth;
-        private static double SignWidth;
-        private static double SignRadius;
 
         //Different font sizes
         private static double FretFontSize;
@@ -218,9 +212,6 @@ namespace ChordCanvas
 
             ImageWidth = (BoxWidth + 5 * FretWidth);
             ImageHeight = (BoxHeight + yStart + FretWidth + FretWidth);
-
-            SignWidth = (FretWidth * 0.75);
-            SignRadius = SignWidth / 2;
         }
 
         private static async Task DrawChordBox()
@@ -303,7 +294,7 @@ namespace ChordCanvas
         {
             var drawTasks = new List<Task>();
 
-            double xpos = xStart - (0.5 * FretWidth) + (0.5 * LineWidth);
+            double xpos = xStart + 0.5 * (LineWidth - FretWidth);
             double yoffset = yStart - FretWidth;
             foreach (var absolutePos in _ChordPositions)
             {
@@ -349,48 +340,42 @@ namespace ChordCanvas
             var drawTasks = new List<Task>();
 
             double yoffset = yStart - FretWidth;
-            double totalFretWidth = FretWidth + LineWidth;
             Font font = new Font(_ctx, _FontName, FingerFontSize);
 
-            for (int i = 0; i < _ChordPositions.Count(); i++)
+            double xpos = xStart - 0.5 * (FretWidth - LineWidth);
+            foreach (var pf in _ChordPositions.Zip(_Fingers, (absolutePos, finger) => (absolutePos, finger)))
             {
-                int absolutePos = _ChordPositions[i];
-                int relativePos = absolutePos - BaseFret + 1;
+                int relativePos = pf.absolutePos - BaseFret + 1;
 
-                double xpos = xStart - (0.5 * FretWidth) + (0.5 * LineWidth) + (i * totalFretWidth);
                 if (relativePos > 0)
                 {
-                    double ypos = relativePos * totalFretWidth + yoffset + 0.25 * DotWidth;
+                    double ypos = relativePos * (FretWidth + LineWidth) + yoffset;
                     drawTasks.Add(Graphics.FillCircle(_ForegroundBrush, xpos, ypos, DotWidth));
 
-                    Chord.Fingers finger = _Fingers[i];
-                    if (finger != Chord.Fingers.NoFinger)
+                    if (pf.finger != Chord.Fingers.NoFinger)
                     {
-                        var charSize = await Graphics.MeasureString(finger.ToString("d"));
-                        drawTasks.Add(Graphics.DrawString(finger.ToString("d"), font, _BackgroundBrush, xpos - 0.5 * (charSize - DotWidth), ypos));
+                        drawTasks.Add(Graphics.DrawString(pf.finger.ToString("d"), font, _BackgroundBrush, xpos + 0.5 * DotWidth, ypos + LineWidth));
                     }
                 }
-                else if (absolutePos == 0)
+                else if (pf.absolutePos == 0)
                 {
                     Pen pen = new Pen(_ctx, _ForegroundBrush, LineWidth);
-                    double ypos = yStart - FretWidth + 0.25 * DotWidth;
+                    double ypos = yStart - FretWidth;
                     var markerXpos = xpos + ((DotWidth - MarkerWidth) / 2);
                     if (BaseFret == 1)
                         ypos -= NutHeight;
 
                     drawTasks.Add(Graphics.DrawCircle(pen, markerXpos, ypos, MarkerWidth));
 
-                    Chord.Fingers finger = _Fingers[i];
-                    if (finger != Chord.Fingers.NoFinger)
+                    if (pf.finger != Chord.Fingers.NoFinger)
                     {
-                        var charSize = await Graphics.MeasureString(finger.ToString("d"));
-                        drawTasks.Add(Graphics.DrawString(finger.ToString("d"), font, _BackgroundBrush, xpos - 0.5 * (charSize - DotWidth), ypos));
+                        drawTasks.Add(Graphics.DrawString(pf.finger.ToString("d"), font, _BackgroundBrush, xpos + 0.5 * DotWidth, ypos + LineWidth));
                     }
                 }
-                else if (absolutePos == -1)
+                else if (pf.absolutePos == -1)
                 {
                     Pen pen = new Pen(_ctx, _ForegroundBrush, LineWidth * 1.5);
-                    var ypos = yStart - FretWidth + 0.25 * DotWidth;
+                    var ypos = yStart - FretWidth;
                     var markerXpos = xpos + ((DotWidth - MarkerWidth) / 2);
                     if (BaseFret == 1)
                     {
@@ -399,13 +384,13 @@ namespace ChordCanvas
                     drawTasks.Add(Graphics.DrawLine(pen, markerXpos, ypos, markerXpos + MarkerWidth, ypos + MarkerWidth));
                     drawTasks.Add(Graphics.DrawLine(pen, markerXpos, ypos + MarkerWidth, markerXpos + MarkerWidth, ypos));
 
-                    Chord.Fingers finger = _Fingers[i];
-                    if (finger != Chord.Fingers.NoFinger)
+                    if (pf.finger != Chord.Fingers.NoFinger)
                     {
-                        var charSize = await Graphics.MeasureString(finger.ToString("d"));
-                        drawTasks.Add(Graphics.DrawString(finger.ToString("d"), font, _BackgroundBrush, xpos - 0.5 * (charSize - DotWidth), ypos));
+                        drawTasks.Add(Graphics.DrawString(pf.finger.ToString("d"), font, _BackgroundBrush, xpos + 0.5 * DotWidth, ypos + LineWidth));
                     }
                 }
+
+                xpos += FretWidth + LineWidth;
             }
 
             await Task.WhenAll(drawTasks);
@@ -422,8 +407,7 @@ namespace ChordCanvas
             {
                 if (finger != Chord.Fingers.NoFinger)
                 {
-                    var charSize = await Graphics.MeasureString(finger.ToString("d"));
-                    drawTasks.Add(Graphics.DrawString(finger.ToString("d"), font, _ForegroundBrush, xpos - (0.5 * charSize), ypos));
+                    drawTasks.Add(Graphics.DrawString(finger.ToString("d"), font, _ForegroundBrush, xpos, ypos));
                 }
                 xpos += (FretWidth + LineWidth);
             }
@@ -440,8 +424,7 @@ namespace ChordCanvas
             Font font = new Font(_ctx, _FontName, GuitarStringFontSize);
             foreach (string guitarString in _StringNames)
             {
-                var charSize = await Graphics.MeasureString(guitarString);
-                drawTasks.Add(Graphics.DrawString(guitarString, font, _ForegroundBrush, xpos - (0.5 * charSize), ypos));
+                drawTasks.Add(Graphics.DrawString(guitarString, font, _ForegroundBrush, xpos, ypos));
                 xpos += (FretWidth + LineWidth);
             }
 
@@ -465,33 +448,28 @@ namespace ChordCanvas
                 name = parts[0];
                 supers = parts[1];
             }
-            double stringWidth = await Graphics.MeasureString(name);
 
             var drawTasks = new List<Task>();
 
-            double xTextStart = xStart;
-            if (stringWidth < BoxWidth)
-            {
-                xTextStart = xStart + ((BoxWidth - stringWidth) / 2);
-            }
+            double xTextStart = xStart + 0.5 * BoxWidth;
             drawTasks.Add(Graphics.DrawString(name, nameFont, _ForegroundBrush, xTextStart, 0.1 * SuperScriptFontSize));
             if (supers != "")
             {
-                drawTasks.Add(Graphics.DrawString(supers, superFont, _ForegroundBrush, xTextStart + 0.8 * stringWidth, 0));
+                drawTasks.Add(Graphics.DrawString(supers, superFont, _ForegroundBrush, xTextStart, 0));
             }
 
             if (BaseFret > 1)
             {
                 Font fretFont = new Font(_ctx, _FontName, FretFontSize);
                 double offset = (FretFontSize - FretWidth) / 2;
-                drawTasks.Add(Graphics.DrawString(BaseFret + "fr", fretFont, _ForegroundBrush, xStart + BoxWidth + 0.4 * FretWidth, yStart - offset));
+                drawTasks.Add(Graphics.DrawString(BaseFret + "fr", fretFont, _ForegroundBrush, xStart + BoxWidth + 0.4 * FretWidth, yStart - offset, TextAlign.Left));
             }
 
             await Task.WhenAll(drawTasks);
         }
 
 
-        public static async Task CreateImage(Canvas2DContext ctx, Chord chord, Layout layout, double size, double w, double h)
+        public static async Task CreateImage(Canvas2DContext ctx, Chord chord, Layout layout, double size)
         {
             _ctx = ctx;
             _ChordPositions = chord.FretList.ToList();
@@ -501,7 +479,6 @@ namespace ChordCanvas
             InitSizes(size);
             ParseChord();
 
-            await _ctx.ClearRectAsync(0, 0, w, h);
             await Graphics.FillRectangle(_BackgroundBrush, 0, 0, ImageWidth, ImageHeight);
 
             var drawTasks = new List<Task>();
@@ -523,7 +500,7 @@ namespace ChordCanvas
                         drawTasks.Add(DrawChordBox());
                         drawTasks.Add(DrawChordPositions());
                         drawTasks.Add(DrawBars());
-                        drawTasks.Add(DrawChordName());
+                        await DrawChordName();
                         drawTasks.Add(DrawFingers());
                     }
                     break;
