@@ -47,6 +47,11 @@
     <p>Request Failed. The entered chord may have been invalid.</p>
 }
 
+@if (mCurrentChord is null && !mRequestFailed)
+{
+     <div class="loader"></div> 
+}
+
 <BECanvas @ref="mCanvasReference" Width="1200" Height="800"></BECanvas>
 <div class="HiddenCanvas">
     <BECanvas @ref="mCanvasReferenceHidden" Width="1200" Height="800"></BECanvas>
@@ -83,6 +88,9 @@
 
     private async Task ToggleButton(EntryButton buttonPressed)
     {
+        mCurrentChord = null;
+        await mContext.ClearRectAsync(0, 0, mCanvasReference.Width, mCanvasReference.Height);
+
         switch (buttonPressed.Stage)
         {
             case ChordEntryStage.Note:
