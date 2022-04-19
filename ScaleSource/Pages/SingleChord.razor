@@ -10,49 +10,53 @@
 @using Blazor.Extensions.Canvas.Canvas2D
 @inject ChordFinderService ChordService
 
-<h1>Single Chords</h1>
+<div class="ChordDisplay">
+    
+    @if (mRequestFailed)
+    {
+        <p>Request Failed. The entered chord may have been invalid.</p>
+    }
 
-<SfButtonGroup CssClass="e-round-corner">
-@foreach (var noteButton in mNoteButtons)
-{
-    <ButtonGroupButton @bind=@noteButton.Button IsToggle="true"
-    @onclick="async() => await ToggleButton(noteButton)">@noteButton.Name</ButtonGroupButton>
-}
-</SfButtonGroup>
+    @if (mCurrentChord is null && !mRequestFailed)
+    {
+        <div class="loader"></div> 
+    }
 
-<br />
+    <div class="CanvasWrapper">
+    <BECanvas @ref="mCanvasReference" Width="350" Height="525"></BECanvas>
+    </div>
+</div>
 
-<SfButtonGroup CssClass="e-round-corner">
-@foreach (var accidentalButton in mAccButtons)
-{
-    <ButtonGroupButton @bind=@accidentalButton.Button IsToggle="true" 
-    @onclick="async() => await ToggleButton(accidentalButton)">@accidentalButton.Name</ButtonGroupButton>
-}
-</SfButtonGroup>
+<div class="ChordEntry">
+    <SfButtonGroup CssClass="ButtonGroup">
+    @foreach (var noteButton in mNoteButtons)
+    {
+        <ButtonGroupButton CssClass="EntryButton" @bind=@noteButton.Button IsToggle="true"
+        @onclick="async() => await ToggleButton(noteButton)">@noteButton.Name</ButtonGroupButton>
+    }
+    </SfButtonGroup>
 
-<br />
+    <br />
 
-<SfButtonGroup CssClass="e-round-corner">
-@foreach (var scaleButton in mScaleButtons)
-{
-    <ButtonGroupButton @bind=@scaleButton.Button IsToggle="true" 
-    @onclick="async() => await ToggleButton(scaleButton)">@scaleButton.Name</ButtonGroupButton>
-}
-</SfButtonGroup>
+    <SfButtonGroup CssClass="ButtonGroup">
+    @foreach (var accidentalButton in mAccButtons)
+    {
+        <ButtonGroupButton CssClass="EntryButton" @bind=@accidentalButton.Button IsToggle="true" 
+        @onclick="async() => await ToggleButton(accidentalButton)">@accidentalButton.Name</ButtonGroupButton>
+    }
+    </SfButtonGroup>
 
-<br />
+    <br />
 
-@if (mRequestFailed)
-{
-    <p>Request Failed. The entered chord may have been invalid.</p>
-}
+    <SfButtonGroup CssClass="ButtonGroup">
+    @foreach (var scaleButton in mScaleButtons)
+    {
+        <ButtonGroupButton CssClass="EntryButton" @bind=@scaleButton.Button IsToggle="true" 
+        @onclick="async() => await ToggleButton(scaleButton)">@scaleButton.Name</ButtonGroupButton>
+    }
+    </SfButtonGroup>
+</div>
 
-@if (mCurrentChord is null && !mRequestFailed)
-{
-    <div class="loader"></div> 
-}
-
-<BECanvas @ref="mCanvasReference" Width="1200" Height="800"></BECanvas>
 <div class="HiddenCanvas">
     <BECanvas @ref="mCanvasReferenceHidden" Width="1200" Height="800"></BECanvas>
 </div>

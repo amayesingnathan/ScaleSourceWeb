@@ -208,7 +208,7 @@ namespace ChordCanvas
             }
 
             xStart = FretWidth;
-            yStart = Math.Round(0.2 * SuperScriptFontSize + NameFontSize + NutHeight + 1.7 * MarkerWidth);
+            yStart = Math.Round(0.2 * SuperScriptFontSize + NameFontSize + NutHeight + 1.7 * MarkerWidth) + 25;
 
             ImageWidth = (BoxWidth + 5 * FretWidth);
             ImageHeight = (BoxHeight + yStart + FretWidth + FretWidth);
@@ -452,7 +452,7 @@ namespace ChordCanvas
             var drawTasks = new List<Task>();
 
             double xTextStart = xStart + 0.5 * BoxWidth;
-            drawTasks.Add(Graphics.DrawString(name, nameFont, _ForegroundBrush, xTextStart, 0.1 * SuperScriptFontSize));
+            drawTasks.Add(Graphics.DrawString(name, nameFont, _ForegroundBrush, xTextStart, 0));
             if (supers != "")
             {
                 drawTasks.Add(Graphics.DrawString(supers, superFont, _ForegroundBrush, xTextStart, 0));
