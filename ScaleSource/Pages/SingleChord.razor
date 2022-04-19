@@ -31,7 +31,7 @@
     <SfButtonGroup CssClass="ButtonGroup">
     @foreach (var noteButton in mNoteButtons)
     {
-        <ButtonGroupButton CssClass="EntryButton" @bind=@noteButton.Button IsToggle="true"
+        <ButtonGroupButton CssClass=@noteButton.CSS @bind=@noteButton.Button IsToggle="true"
         @onclick="async() => await ToggleButton(noteButton)">@noteButton.Name</ButtonGroupButton>
     }
     </SfButtonGroup>
@@ -41,7 +41,7 @@
     <SfButtonGroup CssClass="ButtonGroup">
     @foreach (var accidentalButton in mAccButtons)
     {
-        <ButtonGroupButton CssClass="EntryButton" @bind=@accidentalButton.Button IsToggle="true" 
+        <ButtonGroupButton CssClass=@accidentalButton.CSS @bind=@accidentalButton.Button IsToggle="true" 
         @onclick="async() => await ToggleButton(accidentalButton)">@accidentalButton.Name</ButtonGroupButton>
     }
     </SfButtonGroup>
@@ -51,7 +51,7 @@
     <SfButtonGroup CssClass="ButtonGroup">
     @foreach (var scaleButton in mScaleButtons)
     {
-        <ButtonGroupButton CssClass="EntryButton" @bind=@scaleButton.Button IsToggle="true" 
+        <ButtonGroupButton CssClass=@scaleButton.CSS @bind=@scaleButton.Button IsToggle="true" 
         @onclick="async() => await ToggleButton(scaleButton)">@scaleButton.Name</ButtonGroupButton>
     }
     </SfButtonGroup>
@@ -65,6 +65,10 @@
     private EntryButton[] mNoteButtons = Enumerable.Range(0, 7).Select(i => new EntryButton(i, ChordEntryStage.Note)).ToArray();
     private EntryButton[] mAccButtons = Enumerable.Range(0, 3).Select(i => new EntryButton(i, ChordEntryStage.Accidental)).ToArray();
     private EntryButton[] mScaleButtons = Enumerable.Range(0, 2).Select(i => new EntryButton(i, ChordEntryStage.Scale)).ToArray();
+
+    private EntryButton mCurrentNote;
+    private EntryButton mCurrentAcc;
+    private EntryButton mCurrentScale;
 
     private string mNoteEntered = "C";
     private string mAccidentalEntered = "";
@@ -98,16 +102,31 @@
         switch (buttonPressed.Stage)
         {
             case ChordEntryStage.Note:
+            {
                 mNoteEntered = buttonPressed.APIName;
-                break;
+                mCurrentNote.CSS = "EntryButton";
+                mCurrentNote = buttonPressed;
+                mCurrentNote.CSS = "EntryButtonPressed";
+            }
+            break;
 
             case ChordEntryStage.Accidental:
+            {
                 mAccidentalEntered = buttonPressed.APIName;
-                break; 
+                mCurrentAcc.CSS = "EntryButton";
+                mCurrentAcc = buttonPressed;
+                mCurrentAcc.CSS = "EntryButtonPressed";
+            }
+            break; 
 
             case ChordEntryStage.Scale:
+            {
                 mScaleEntered = buttonPressed.APIName;
-                break;
+                mCurrentScale.CSS = "EntryButton";
+                mCurrentScale = buttonPressed;
+                mCurrentScale.CSS = "EntryButtonPressed";
+            }
+            break;
         }
 
         await RequestChord();
@@ -115,6 +134,15 @@
 
     protected override async Task OnInitializedAsync()
     {
+        mCurrentNote = mNoteButtons[2];
+        mCurrentNote.CSS = "EntryButtonPressed";
+
+        mCurrentAcc = mAccButtons[0];
+        mCurrentAcc.CSS = "EntryButtonPressed";
+
+        mCurrentScale = mScaleButtons[0];
+        mCurrentScale.CSS = "EntryButtonPressed";
+
         await RequestChord();
     }
 

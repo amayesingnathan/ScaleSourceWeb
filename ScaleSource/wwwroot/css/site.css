@@ -73,7 +73,7 @@ a, .btn-link {
     height: 525px;
     display: flex;
     justify-content: center;
-    padding-top: 50px
+    padding-top: 25px
 }
 
 .CanvasWrapper {
@@ -146,10 +146,6 @@ a, .btn-link {
     font-size: 1px;
 }
 
-    .EntryButton:focus {
-        box-shadow: #D6D6E7 0 0 0 1.5px inset, rgba(45, 35, 66, 0.4) 0 2px 4px, rgba(45, 35, 66, 0.3) 0 7px 13px -3px, #D6D6E7 0 -3px 0 inset;
-    }
-
     .EntryButton:hover {
         box-shadow: rgba(45, 35, 66, 0.4) 0 4px 8px, rgba(45, 35, 66, 0.3) 0 7px 13px -3px, #D6D6E7 0 -3px 0 inset;
         transform: translateY(-2px);
@@ -159,3 +155,14 @@ a, .btn-link {
         box-shadow: #D6D6E7 0 3px 7px inset;
         transform: translateY(2px);
     }
+
+.EntryButtonPressed {
+    font-family: "JetBrains Mono",monospace;
+    height: 64px;
+    width: 64px;
+    font-size: 30px;
+}
+
+.e-btn {
+    font-size: 64px;
+}

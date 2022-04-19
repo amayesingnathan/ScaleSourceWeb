@@ -20,8 +20,7 @@ namespace ScaleSourceWeb.Data
         public string Name { get; set; }
         public string APIName => ToAPIName(Name);
         public ChordEntryStage Stage { get; set; }
-
-        public bool Pressed { get; set; } = false;
+        public string CSS { get; set; } = "EntryButton";
 
         public EntryButton(int i, ChordEntryStage stage)
         {
