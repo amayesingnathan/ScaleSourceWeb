@@ -157,7 +157,7 @@
         if (mCurrentChord is null) return;
 
         await mContextHidden.ClearRectAsync(0, 0, mCanvasReferenceHidden.Width, mCanvasReferenceHidden.Height);
-        await ChordBoxImage.CreateImage(mContextHidden, mCurrentChord, ChordBoxImage.Layout.Two, 12.0);
+        await CanvasAPI.CreateImage(mContextHidden, mCurrentChord, CanvasAPI.Layout.Two, 12.0);
         await mContext.DrawImageAsync(mCanvasReferenceHidden.CanvasReference, 0, 0);
     }
 
